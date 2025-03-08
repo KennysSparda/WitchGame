@@ -7,8 +7,10 @@ class Magic {
 
       this.x = x
       this.y = y
-      this.width = 64
-      this.height = 64
+      this.initialSize = 16
+      this.size = this.initialSize
+      this.width = this.size
+      this.height = this.size
       this.speed = 5
       this.owner = owner
       this.direction = direction
@@ -22,6 +24,10 @@ class Magic {
           this.imageLoaded = true
           this.applyColorFilter()
       }
+  }
+
+  getDamage() {
+    return Math.round((this.size / 16) * 20); // O dano base é 20 para magias de tamanho 64
   }
 
   applyColorFilter() {
@@ -44,12 +50,27 @@ class Magic {
   }
 
   update() {
-      if (this.direction === 'right') this.x += this.speed
-      if (this.direction === 'left') this.x -= this.speed
-      if (this.direction === 'up') this.y -= this.speed
-      if (this.direction === 'down') this.y += this.speed
-    
-      return !(this.x < 0 || this.x > window.innerWidth || this.y < 0 || this.y > window.innerHeight)
+    // Antes de mover, guarda a posição antiga do centro
+    const oldCenterX = this.x + this.width / 2;
+    const oldCenterY = this.y + this.height / 2;
+
+    if (this.direction === 'right') this.x += this.speed;
+    if (this.direction === 'left') this.x -= this.speed;
+    if (this.direction === 'up') this.y -= this.speed;
+    if (this.direction === 'down') this.y += this.speed;
+
+    // Após a colisão e crescimento, recalcula a posição
+    if (this.size !== this.width) { 
+        const sizeIncrease = this.size - this.width;
+        this.width = this.size;
+        this.height = this.size;
+
+        // Ajusta para manter o centro no mesmo lugar
+        this.x = oldCenterX - this.width / 2;
+        this.y = oldCenterY - this.height / 2;
+    }
+
+    return !(this.x < 0 || this.x > window.innerWidth || this.y < 0 || this.y > window.innerHeight);
   }
 
   render(context) {

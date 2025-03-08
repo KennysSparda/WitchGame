@@ -23,7 +23,7 @@ class Player {
 
         this.magicKey = magicKey;
         this.magics = [];
-        this.magicCooldown = 500;
+        this.magicCooldown = 300;
         this.lastMagicTime = 0;
 
         this.hp = 100;
@@ -118,9 +118,6 @@ class Player {
             }
         }
 
-        this.castingLoop--
-        console.log(this.castingLoop)
-
         if (inputManager.isKeyPressed(this.controls.right)) {
             this.x += this.speed;
             this.direction = 'side';
@@ -155,27 +152,40 @@ class Player {
 
         this.magics = this.magics.filter(magic => magic.update());
 
-        this.frameIndex = moving ? (this.frameIndex % 2) + 1 : 0;
+        if (this.isCastingMagic) {
+            this.frameIndex = 3 + (this.frameIndex % 2); // Usa as colunas 4 e 5 (começa do 3 pq índice começa em 0)
+        } else if (moving) {
+            this.frameIndex = 1 + (this.frameIndex % 2); // Usa as colunas 2 e 3
+        } else {
+            this.frameIndex = 0; // Padrão parado
+        }
     }
 
     castMagic() {
         if (this.isDead) return; // Impede de lançar magias depois de morto
-
-        let magicX = this.x;
-        let magicY = this.y;
-
+    
+        const magicSize = 16; // Tamanho de colisão da magia
+        const spriteOffset = 32; // Metade do tamanho do sprite da magia (exemplo: se for 64x64)
+    
+        let magicX = this.x + this.width / 2 - magicSize / 2; // Centraliza horizontalmente
+        let magicY = this.y + this.height / 2 - magicSize / 2; // Centraliza verticalmente
+    
         let direction = 'right';
-
+    
         if (this.direction === 'side') {
             direction = this.flipped ? 'left' : 'right';
+            magicX += this.flipped ? -spriteOffset : spriteOffset; // Ajusta a posição para sair da mão do player
         } else if (this.direction === 'up') {
             direction = 'up';
+            magicY -= spriteOffset;
         } else if (this.direction === 'down') {
             direction = 'down';
+            magicY += spriteOffset;
         }
-
+    
         this.magics.push(new Magic(magicX, magicY, direction, this));
     }
+    
 
     renderHealthBar(context) {
         if (this.isDead) return; // Não exibe barra de vida se morto
@@ -198,7 +208,7 @@ class Player {
         } else if (this.isCastingMagic) {
             const directions = { down: 0, up: 1, side: 2 };
             row = directions[this.direction];
-            col = 3;
+            col = this.frameIndex;
 
         } else {
             const directions = { down: 0, up: 1, side: 2 };
