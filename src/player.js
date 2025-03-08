@@ -1,5 +1,6 @@
 class Player {
-    constructor(x, y, speed, controls, color, magicKey) {
+    constructor(x, y, speed, controls, color, magicKey, engine) {
+        this.engine = engine
         this.image = new Image();
         this.image.src = 'img/player.png';
 
@@ -7,7 +8,12 @@ class Player {
         this.y = y;
         this.width = 64;
         this.height = 64;
-        this.speed = speed;
+        this.initialSpeed = speed;
+        this.speed = this.initialSpeed;
+        this.moving = false;
+        this.vx = 0;
+        this.vy = 0;
+        
         this.direction = 'down';
         this.flipped = false;
 
@@ -23,7 +29,7 @@ class Player {
 
         this.magicKey = magicKey;
         this.magics = [];
-        this.magicCooldown = 300;
+        this.magicCooldown = 100;
         this.lastMagicTime = 0;
 
         this.hp = 100;
@@ -90,15 +96,17 @@ class Player {
     }
 
     update() {
+        this.vx = 0;
+        this.vy = 0;
         if (this.isDead) {
             if (this.deathTimer > 0) {
-                this.deathTimer--; // Conta o tempo antes de mudar para sprite "caído"
+                this.deathTimer--;
             }
-            return; // Se estiver morto, não processa movimentação nem magias
+            return;
         }
-
-        let moving = false;
-        
+    
+        this.moving = false;
+    
         // Controle do piscar
         if (this.isBlinking) {
             this.blinkLoop--;
@@ -106,10 +114,10 @@ class Player {
                 this.isBlinking = false;
                 this.isVisible = true;
             } else {
-                this.isVisible = this.blinkLoop % 4 < 2; // Pisca a cada 2 frames
+                this.isVisible = this.blinkLoop % 4 < 2;
             }
         }
-
+    
         // Só diminui o castingLoop se estiver conjurando
         if (this.isCastingMagic) {
             this.castingLoop--;
@@ -117,28 +125,58 @@ class Player {
                 this.isCastingMagic = false;
             }
         }
-
+    
+        // Verifica colisões antes de mover
+        let nextX = this.x;
+        let nextY = this.y;
+    
         if (inputManager.isKeyPressed(this.controls.right)) {
-            this.x += this.speed;
+            nextX += this.speed;
+            this.vx = this.speed;
             this.direction = 'side';
             this.flipped = false;
-            moving = true;
+            this.moving = true;
         }
         if (inputManager.isKeyPressed(this.controls.left)) {
-            this.x -= this.speed;
+            nextX -= this.speed;
+            this.vx = -this.speed;
             this.direction = 'side';
             this.flipped = true;
-            moving = true;
+            this.moving = true;
         }
         if (inputManager.isKeyPressed(this.controls.up)) {
-            this.y -= this.speed;
+            nextY -= this.speed;
+            this.vy = -this.speed;
             this.direction = 'up';
-            moving = true;
+            this.moving = true;
         }
         if (inputManager.isKeyPressed(this.controls.down)) {
-            this.y += this.speed;
+            nextY += this.speed;
+            this.vy = this.speed;
             this.direction = 'down';
-            moving = true;
+            this.moving = true;
+        }
+    
+        // Verifica colisão com caixas antes de atualizar a posição
+        let canMove = true;
+        this.engine.entities.forEach(entity => {
+            if (entity instanceof Box) {
+                if (this.engine.checkEntityCollision(
+                    { x: nextX, y: nextY, width: this.width, height: this.height },
+                    entity
+                )) {
+                    canMove = false; // Colisão detectada
+                }
+            }
+        });
+    
+        // Aplica o movimento apenas se não houver colisão
+        if (canMove) {
+            this.x = nextX;
+            this.y = nextY;
+        } else {
+            this.vx = 0;
+            this.vy = 0;
         }
 
         const currentTime = Date.now();
@@ -154,7 +192,7 @@ class Player {
 
         if (this.isCastingMagic) {
             this.frameIndex = 3 + (this.frameIndex % 2); // Usa as colunas 4 e 5 (começa do 3 pq índice começa em 0)
-        } else if (moving) {
+        } else if (this.moving) {
             this.frameIndex = 1 + (this.frameIndex % 2); // Usa as colunas 2 e 3
         } else {
             this.frameIndex = 0; // Padrão parado
@@ -183,9 +221,8 @@ class Player {
             magicY += spriteOffset;
         }
     
-        this.magics.push(new Magic(magicX, magicY, direction, this));
+        this.magics.push(new Magic(magicX, magicY, direction, this, this.engine));
     }
-    
 
     renderHealthBar(context) {
         if (this.isDead) return; // Não exibe barra de vida se morto
