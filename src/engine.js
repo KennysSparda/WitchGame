@@ -26,40 +26,37 @@ class Engine {
     }
     
     update() {
-        this.entities.forEach(entity => entity.update && entity.update())
-
-        const allMagics = []
-
+        this.entities.forEach(entity => entity.update && entity.update());
+    
+        const allMagics = [];
+    
         this.entities.forEach(entity => {
             if (entity instanceof Player) {
-                allMagics.push(...entity.magics)
+                allMagics.push(...entity.magics);
             }
-        })
-
+        });
+    
         this.entities.forEach(entity => {
-            if (entity instanceof Player) {
+            if (entity instanceof Player && !entity.isDead) { // Evita colisão se estiver morto
                 allMagics.forEach(magic => {
                     if (magic.owner !== entity && this.checkCollision(entity, magic)) {
-                        console.log(`Dano aplicado ao player ${entity.color}!`)
-                        entity.takeDamage(20)
-                        magic.owner.magics.splice(magic.owner.magics.indexOf(magic), 1)
+                        entity.takeDamage(20);
+                        magic.owner.magics.splice(magic.owner.magics.indexOf(magic), 1);
                     }
-                })
+                });
             }
-        })
-
+        });
+    
         for (let i = 0; i < allMagics.length; i++) {
             for (let j = i + 1; j < allMagics.length; j++) {
                 if (this.checkCollision(allMagics[i], allMagics[j])) {
-                    console.log(`Colisão entre magias de ${allMagics[i].owner.color} e ${allMagics[j].owner.color}!`)
-    
-                    // Remove ambas as magias
-                    allMagics[i].owner.magics.splice(allMagics[i].owner.magics.indexOf(allMagics[i]), 1)
-                    allMagics[j].owner.magics.splice(allMagics[j].owner.magics.indexOf(allMagics[j]), 1)
+                    allMagics[i].owner.magics.splice(allMagics[i].owner.magics.indexOf(allMagics[i]), 1);
+                    allMagics[j].owner.magics.splice(allMagics[j].owner.magics.indexOf(allMagics[j]), 1);
                 }
             }
         }
     }
+    
         
 
     render() {
