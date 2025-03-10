@@ -23,10 +23,13 @@ class Magic {
           this.imageLoaded = true;
           this.applyColorFilter();
       };
+
+      this.sound = new Sound('magic')
+      this.sound.play()
   }
 
   getDamage() {
-      return Math.round((this.size / 16) * 20); // O dano base é 20 para magias de tamanho 64
+      return Math.round((this.size / 16) * 5); // O dano base é 20 para magias de tamanho 64
   }
 
   applyColorFilter() {

@@ -34,7 +34,7 @@ class Player {
 
         this.hp = 100;
         this.isDead = false;
-        this.deathTimer = 30; // Tempo para a animação de "cair" antes de deitar
+        this.deathTimer = 50; // Tempo para a animação de "cair" antes de deitar
 
         this.isCastingMagic = false;
         this.castingDuration = 30
@@ -50,11 +50,21 @@ class Player {
             this.imageLoaded = true;
             this.applyColorFilter();
         };
+
+        // 🎵 Inicialização dos sons
+        this.sounds = {
+            step: new Sound('step'),
+            hit: new Sound('hit'),
+            die: new Sound('die'),
+        };
+        
     }
 
     takeDamage(amount) {
         if (this.isDead) return;
-
+    
+        this.sounds.hit.play()
+    
         this.hp -= amount;
         if (this.hp <= 0) {
             console.log(`${this.color} morreu!`);
@@ -72,6 +82,11 @@ class Player {
     }
 
     die() {
+        this.sounds.die.play();
+        this.color = 'white'
+        this.applyColorFilter()
+        this.isVisible = true;
+        this.isBlinking = false;
         this.isDead = true;
         this.direction = 'dead'; // Nova direção para renderizar a sprite de morte
         this.frameIndex = 0; // Começa a animação de morte
@@ -102,9 +117,10 @@ class Player {
             if (this.deathTimer > 0) {
                 this.deathTimer--;
             }
+            this.frameIndex = 2; // Força um frame específico para a morte
             return;
         }
-    
+        
         this.moving = false;
     
         // Controle do piscar
@@ -179,6 +195,14 @@ class Player {
             this.vy = 0;
         }
 
+        // 🎵 Controle do som de passos
+        if (this.moving) {
+            console.log('sound moving')
+            this.sounds.step.play();
+        } else {
+            this.sounds.step.pause();
+        }
+
         const currentTime = Date.now();
 
         if (inputManager.isKeyPressed(this.magicKey) && (currentTime - this.lastMagicTime) > this.magicCooldown) {
@@ -193,6 +217,7 @@ class Player {
         if (this.isCastingMagic) {
             this.frameIndex = 3 + (this.frameIndex % 2); // Usa as colunas 4 e 5 (começa do 3 pq índice começa em 0)
         } else if (this.moving) {
+
             this.frameIndex = 1 + (this.frameIndex % 2); // Usa as colunas 2 e 3
         } else {
             this.frameIndex = 0; // Padrão parado
@@ -200,10 +225,10 @@ class Player {
     }
 
     castMagic() {
+        
         if (this.isDead) return; // Impede de lançar magias depois de morto
-    
         const magicSize = 16; // Tamanho de colisão da magia
-        const spriteOffset = 32; // Metade do tamanho do sprite da magia (exemplo: se for 64x64)
+        const spriteOffset = 8; // Metade do tamanho do sprite da magia (exemplo: se for 64x64)
     
         let magicX = this.x + this.width / 2 - magicSize / 2; // Centraliza horizontalmente
         let magicY = this.y + this.height / 2 - magicSize / 2; // Centraliza verticalmente
