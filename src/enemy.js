@@ -1,104 +1,14 @@
-class Enemy {
-  constructor(x, y, speed, color, magicKey, engine, type) {
-    this.engine = engine
-    this.image = new Image()
-    this.image.src = 'img/player.png'
-
-    this.x = x
-    this.y = y
-    this.width = 64
-    this.height = 64
-    this.initialSpeed = speed
-    this.speed = this.initialSpeed
-    this.moving = false
-    this.vx = 0
-    this.vy = 0
-    
-    this.direction = 'down'
-    this.flipped = false
-
-    this.frameIndex = 0
-    this.frameTimer = 0
-    this.frameSpeed = 10
-
-    this.color = color
-
-    this.coloredImage = null
-    this.imageLoaded = false
-
-    this.magicKey = magicKey
-    this.magics = []
-    this.magicCooldown = 100
-    this.lastMagicTime = 0
-
-    this.hp = 100
-    this.isDead = false
-    this.deathTimer = 50 
-
-    this.isCastingMagic = false
-    this.castingDuration = 30
-    this.castingLoop = this.castingDuration
-
-    
-    this.isBlinking = false
-    this.blinkDuration = 10 
-    this.blinkLoop = 0
-    this.isVisible = true
-
-    this.image.onload = () => {
-      this.imageLoaded = true
-      this.applyColorFilter()
-    }
-
-    this.movementCounter = 0
-
-    this.type = type
-  }
-
-  takeDamage(amount) {
-    if (this.isDead) return
-
-    this.hp -= amount
-    if (this.hp <= 0) {
-      console.log(`${this.color} morreu!`)
-      this.hp = 0
-      this.die()
-    } else {
-      this.startBlinking()
-    }
-  }
-
-  startBlinking() {
-    this.isBlinking = true
-    this.blinkLoop = this.blinkDuration
-    this.isVisible = false
-  }
-
-  die() {
-    console.log("chamou die")
-    this.isVisible = true
-    this.isBlinking = false
-    this.isDead = true
-    this.direction = 'dead' 
-    this.frameIndex = 0 
-  }
-
-  applyColorFilter() {
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-
-    canvas.width = this.image.width
-    canvas.height = this.image.height
-
-    ctx.drawImage(this.image, 0, 0)
-
-    ctx.globalAlpha = 0.5
-    ctx.globalCompositeOperation = 'source-atop'
-    ctx.fillStyle = this.color
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    this.coloredImage = new Image()
-    this.coloredImage.src = canvas.toDataURL()
+class Player extends Character {
+  constructor(x, y, speed, controls, color, magicKey, engine) {
+      super(x, y, speed, color, engine);
+      this.controls = controls;
+      this.magicKey = magicKey;
+      this.magics = [];
+      this.magicCooldown = 100;
+      this.lastMagicTime = 0;
+      this.isCastingMagic = false;
+      this.castingDuration = 30;
+      this.castingLoop = this.castingDuration;
   }
 
   update() {

@@ -1,24 +1,31 @@
 class Sound {
   constructor(type) {
-    this.audioElement = new Audio();
+    this.type = type;
+    this.audioElement = new Audio(); // Apenas um elemento de áudio
 
-    const soundMap = {
-      magic: { src: "/audio/castMagic.mp3", loop: false },
-      step: { src: "/audio/running-in-grass.mp3", loop: true },
-      hit: { src: "/audio/magic-hit.mp3", loop: false },
-      die: { src: "/audio/scream.mp3", loop: false }
-    };
-
-    const sound = soundMap[type] ?? {};
-    this.audioElement.src = sound.src || "";
-    this.audioElement.loop = sound.loop || false;
+    if (this.type === 'magic') {
+      this.audioElement.src = '/audio/castMagic.mp3';
+    } else if (this.type === 'step') {
+      this.audioElement.src = '/audio/running-in-grass.mp3';
+      this.audioElement.loop = true; // Faz o som de passos tocar continuamente
+    } else if (this.type === 'hit') {
+      this.audioElement.src = '/audio/magic-hit.mp3';
+      this.audioElement.loop = false; // Faz o som de passos tocar continuamente
+    } else if (this.type === 'die') {
+      this.audioElement.src = '/audio/scream.mp3';
+      this.audioElement.loop = false; // Faz o som de passos tocar continuamente
+    }
   }
 
   play() {
-    if (this.audioElement.paused) this.audioElement.play();
+    if (this.audioElement.paused) { // Só toca se estiver pausado
+      this.audioElement.play();
+    }
   }
 
   pause() {
-    if (!this.audioElement.paused) this.audioElement.pause();
+    if (!this.audioElement.paused) { // Só pausa se estiver tocando
+      this.audioElement.pause();
+    }
   }
 }
